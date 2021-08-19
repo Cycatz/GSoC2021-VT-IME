@@ -275,7 +275,81 @@ Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ 
 \clearpage 
 
 ** Frontend 
+
+# The main idea is use vt_processkey....
+The kernel modifications are mostly under ~sys/dev/vt~ directory. To avoid cluttering the origin code, I created a additional directory called ~ime~ to store my patches. Here is a list of static and non-static functions defined in ~ime/vt_ime.{c,h}~ 
+
+
+Static functions:
++ ~static int vt_ime_send_message(struct vt_ime *vi, char *message, char *ret)~
++ ~static int vt_ime_send_char(struct vt_ime *vi, int ch, char *ret)~
++ ~static int vt_ime_delete(struct vt_ime *vi, char *ret)~
++ ~static int vt_ime_request_output(struct vt_ime *vi, char *ret)~
++ ~static int vt_ime_check_valid_char(struct vt_ime *vi, int ch)~
++ ~static int vt_ime_convert_utf8_byte(int *utf8_left, int *utf8_partial, unsigned char c)~
++ ~static void vt_ime_input(struct terminal *, const void *, size_t)~
+
+
+Non-static functions:
++ ~int vt_ime_toggle_mode(struct vt_ime *vi)~
++ ~int vt_ime_is_enabled(struct vt_ime *vi)~
++ ~int vt_ime_process_char(struct terminal *terminal, struct vt_device *vd, struct vt_ime *vi, int ch)~
++ ~void vt_ime_draw_status_bar(struct vt_device *vd, char *status)~
+
+*** ~vt_ime_send_message~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~  
+  + ~static int vt_ime_send_message(struct vt_ime *vi, char *message, char *ret)~
+- Description: :: for communicating with the IME server with socket.
+ 
+*** ~vt_ime_send_char~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static int vt_ime_send_char(struct vt_ime *vi, int ch, char *ret)~
+- Description: :: for sending a single char data with ~vt_ime_send_message~.
+ 
+*** ~vt_ime_delete~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static int vt_ime_delete(struct vt_ime *vi, char *ret)~
+- Description: :: for sending the string "delete" with ~vt_ime_send_message~ for performing the delete action.
+ 
+*** ~vt_ime_request_output~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static int vt_ime_request_output(struct vt_ime *vi, char *ret)~
+- Description: :: for sending the string "output" with ~vt_ime_send_message~ for requesting the text that will be inserted.   
+ 
+*** ~vt_ime_check_valid_char~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static int vt_ime_check_valid_char(struct vt_ime *vi, int ch)~
+- Description: :: for deciding which keys are required to be captured in the IME mode.
+
+*** ~vt_ime_convert_utf8_byte~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static int vt_ime_convert_utf8_byte(int *utf8_left, int *utf8_partial, unsigned char c)~
+- Description: :: for converting a single utf8-encoded char sequence into a 32-bit unsigned integer (~term_char_t~).
+
+*** ~vt_ime_input~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~static void vt_ime_input(struct terminal *term, const void *buf, size_t len)~
+- Description: :: for inserting a utf8-encoded string ~buf~ with len ~len~ into the terminal with ~terminal_input_char~.
+
+*** ~vt_ime_toggle_mode~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~int vt_ime_toggle_mode(struct vt_ime *vi)~
+- Description: :: for toggling the IME mode. 
   
+*** ~vt_ime_is_enabled~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~int vt_ime_is_enabled(struct vt_ime *vi)~
+- Description: :: for checking if the IME mode is enabled. 
 
+*** ~vt_ime_process_char~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~int vt_ime_process_char(struct terminal *terminal, struct vt_device *vd, struct vt_ime *vi, int ch)~
+- Description: :: for processing chars and performing different actions.    
 
+*** ~vt_ime_draw_status_bar~
+- Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
+  + ~void vt_ime_draw_status_bar(struct vt_device *vd, char *status)~
+    
+- Description: :: for drawing the IME status on the screen     
+  
 * Conclusion 
