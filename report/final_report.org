@@ -262,7 +262,7 @@ I started by implementing FFI between C and Python with /ctypes/ to access C API
 
 The next step is to consider how to accomplish the communication between the frontend and backend. The frontend needs to recieve keys from the user, then waits for the backend sending the results back. However, you never know when a user will finish composing. For example, if a user presses a single key ~'5'~ on a standard QWERTY keyboard, which is mapped to a [[https://zh.wikipedia.org/w/index.php?title=%E8%81%B2%E6%AF%8D&redirect=no][/initial/]] (/聲母/ in chinese) 「ㄓ」 (chih in /Wade–Giles/ romanization) in the input schema [[https://en.wikipedia.org/wiki/Bopomofo][/Bopomofo/]] , the IME server can't decide whether there still have key sequences or not, since the user can continue to press the keys mapped to [[https://en.wikipedia.org/wiki/Four_tones_(Middle_Chinese)][Four tones,]] such as pressing the key '3' to compose 「ㄓˇ」 or the space key to compose 「ㄓ」 with /even/ (平 píng) tone. Therefore, the backend IME server is required to keep running in background for listening requests from the frontend. I wrote server-side code with Python's ~socketserver~. You may refer to [[https://gitlab.com/Cycatz/tmux-rime/-/blob/main/tmux_rime/tmux_rime_server.py][~tmux_rime/rime_wrapper/tmux_rime_server.py~]]
 
-Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ for the GSoC first stage evaluation as a proof of concept. It also serves as a test ground for the backend and /librime/. The following figures shows the structure and the screenshot of ~tmux-rime~.
+Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ called ~tmux-rime~ for the GSoC first stage evaluation as a proof of concept. It also serves as a test ground for the backend and /librime/. The following figures shows the structure and the screenshot of ~tmux-rime~.
 
 #+ATTR_LATEX: :width 4in 
 #+CAPTION: tmux-rime structure
@@ -277,7 +277,7 @@ Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ 
 ** Frontend 
 
 # FIX The sentence is too loooooooong~   
-The two most important functions associated with the frontend implementation are ~vt_processkey~ and ~terminal_input_char~. The former is for processing the key, and the latter is for inserting text onto the screen. Therefore, I hijacked the ~vt_processkey~ function. Instead of directly outputting text onto the screen with ~terminal_input_char~ function, I defined a new function called ~vt_ime_process_char~ to handle the user input then send requests to the IME server to convert them into CJK characters when the IME mode is enabled.       
+The two most important functions associated with the frontend implementation are ~vt_processkey~ and ~terminal_input_char~. The former is for processing the key, and the latter is for inserting text onto the screen. Therefore, I hijacked the ~vt_processkey~ function. Instead of directly outputting text onto the screen with ~terminal_input_char~ function, I defined a new function called ~vt_ime_process_char~ to handle the user input then send requests to the IME server to convert them into CJK characters when the IME mode is enabled. 
 
 #+begin_src diff
 @@ -991,9 +1013,16 @@ vt_processkey(keyboard_t *kbd, struct vt_device *vd, int c)
@@ -289,6 +289,10 @@ The two most important functions associated with the frontend implementation are
                 terminal_input_char(vw->vw_terminal, KEYCHAR(c));
 #+end_src
 
+Another thing we need to deal with is the display of the IME status bar. The general ~vt~ display process begins with the one of ~vt~ hardware backends such as  ~vga~ reading the instance of ~vt_buf~ content, then rendering it pixel by pixel onto the screen. However, we don't want to mess up the terminal content buffer when showing the status bar. To separate the status bar from the data buffer ~vb_buffer~ in struct ~vt_buf~, I defined an additional member called ~vb_ime_buffer~ in ~vt_buf~ for storing the data; futhermore, the marco ~VTBUF_GET_FIELD~, which serves as a helper to access the data buffer with the given row and column, also needs to be changed. I extended the macro into a inline function and added a if-else statement to access ~vb_ime_buffer~ only when the IME mode is enabled and the hardware is accessing at the row 0 (line 0); otherwise, read the origin buffer. That will show the status bar on the top of screen when the IME mode is enabled and hide it when disabled. The following code snippets show the patches. 
+
+# To address this issue
+# The main idea 
 
 #+begin_src diff 
 @@ -212,6 +218,10 @@ struct vt_buf {
