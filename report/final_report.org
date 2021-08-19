@@ -276,7 +276,55 @@ Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ 
 
 ** Frontend 
 
-# The main idea is use vt_processkey....
+# FIX The sentence is too loooooooong~   
+The two most important functions associated with the frontend implementation are ~vt_processkey~ and ~terminal_input_char~. The former is for processing the key, and the latter is for inserting text onto the screen. Therefore, I hijacked the ~vt_processkey~ function. Instead of directly outputting text onto the screen with ~terminal_input_char~ function, I defined a new function called ~vt_ime_process_char~ to handle the user input then send requests to the IME server to convert them into CJK characters when the IME mode is enabled.       
+
+#+begin_src diff
+@@ -991,9 +1013,16 @@ vt_processkey(keyboard_t *kbd, struct vt_device *vd, int c)
++ #if VT_IME
++             if (vt_ime_is_enabled(&vt_ime_default))
++                 vt_ime_process_char(vw->vw_terminal, main_vd, &vt_ime_default, KEYCHAR(c));
++             else
++ #endif
+                terminal_input_char(vw->vw_terminal, KEYCHAR(c));
+#+end_src
+
+
+#+begin_src diff 
+@@ -212,6 +218,10 @@ struct vt_buf {
+        term_rect_t              vb_dirtyrect;  /* (b) Dirty rectangle. */
+        term_char_t             *vb_buffer;     /* (u) Data buffer. */
+        term_char_t             **vb_rows;      /* (u) Array of rows */
++
++#ifdef VT_IME
++       term_char_t             *vb_ime_buffer; /* (u) IME status bar buffer. */
++#endif
+ };
+#+end_src
+
+#+begin_src diff
+@@ -257,8 +267,20 @@ void vtbuf_extract_marked(struct vt_buf *vb, term_char_t *buf, int sz);
+        ((vb)->vb_history_size)
+ #define        VTBUF_GET_ROW(vb, r) \
+        ((vb)->vb_rows[((vb)->vb_roffset + (r)) % VTBUF_MAX_HEIGHT(vb)])
+-#define        VTBUF_GET_FIELD(vb, r, c) \
++
++#ifdef VT_IME
++#define VTBUF_GET_FIELD(vb, r, c) \
+        ((vb)->vb_rows[((vb)->vb_roffset + (r)) % VTBUF_MAX_HEIGHT(vb)][(c)])
++#else
++inline term_char_t VTBUF_GET_FIELD(const struct vt_buf *vb, int r, int c)
++{
++    if (vt_test && r == 0) {
++        return vb->vb_ime_buffer[c];
++    } else {
++        return ((vb)->vb_rows[((vb)->vb_roffset + (r)) % VTBUF_MAX_HEIGHT(vb)][(c)]);
++    }
++}
++#endif
+#+end_src
+
+
 The kernel modifications are mostly under ~sys/dev/vt~ directory. To avoid cluttering the origin code, I created a additional directory called ~ime~ to store my patches. Here is a list of static and non-static functions defined in ~ime/vt_ime.{c,h}~ 
 
 
