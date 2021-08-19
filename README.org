@@ -1,0 +1,26 @@
+* GSoC'21: Input method in FreeBSD virtual terminal
+
+** Project description
+This project aims to provide an environment that can run IME (input method engine) to enable users to type CJK characters in ~vt~.
+
+
+** Project Proposal 
+Under the ~proposal~ directory. 
+
+** Deliverables
++ Create an IME backend that accepts keystrokes as arguments or messages and communicates with the input method engine library.
+  + Use librime as the input method engine library to translate keystrokes into valid CJK characters.
+  + Provide extra features like schema selection, deployment, and data synchronization. 
++ Create a graphical frontend to be able to show the current input state and candidates of CJK characters.
+  + First phase: Print the IME information on the tmux status line. Why tmux? Since it's more convenient for us to draft the UI at an early stage and decide how to arrange and display those IME components on the screen. Furthermore, tmux let us customize keybindings and call external scripts easily.
+  + Final phase: Display IME components on the virtual terminal console. And we also need to handle those keys manually and send them to the backend.
+
+** Report
+Under the ~report~ directory. 
+
+** Code  
++ Tmux-rime: https://gitlab.com/Cycatz/tmux-rime
++ Cloned source code: https://github.com/Cycatz/freebsd-src 
+
+** Notes
++ Project notes: https://gitlab.com/Cycatz/gsoc-notes 
