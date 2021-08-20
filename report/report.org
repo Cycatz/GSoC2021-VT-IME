@@ -89,14 +89,13 @@
 
 
 # TODO 時態要一致= =
-* My works
 
-** Introduction 
+* Introduction 
 As the proposal stated, this project aims to provide an environment that can run IME (input method engine) to enable users to type CJK characters in ~vt~.    
 
 This project was divided into two parts, backend and frontend. The backend is supposed to process keys sent from the frontend and translate them into valid CJK characters, depending on different input schemas. The frontend, on the other hand, recieves utf-8 encoded CJK characters and insert them on the screen. Additionally, the frontend need to print preedit string and candidates during composing.
 
-** Backend
+* Backend
 To facilitate the software development process, I choose /Python/ as our backend developmemt language. Compared with other programming languages, /Python/ is renowned for its easy-to-use APIs as well as being an interpreted language. 
  
 I started by implementing FFI between C and Python with /ctypes/ to access C APIs provided in /librime/. However, I found it's difficult to fully implement the mappings from /librime/'s structs and functions to /Python/'s own data types. As a result, I decided to add a C wrapper to define my custom data members and methods to encapsulate those /librime/'s APIs and compiled it into a shared library to be loaded with /ctypes/. Thus I can use Python to write the backend. The code of this part can be found in the directory [[https://gitlab.com/Cycatz/tmux-rime/-/tree/main/tmux_rime][~tmux_rime/rime_wrapper~]] in previously listed ~tmux-rime~ repository. 
@@ -105,6 +104,8 @@ I started by implementing FFI between C and Python with /ctypes/ to access C API
 The next step is to consider how to accomplish the communication between the frontend and backend. The frontend needs to recieve keys from the user, then waits for the backend sending the results back. However, you never know when a user will finish composing. For example, if a user presses a single key ~'5'~ on a standard QWERTY keyboard, which is mapped to a [[https://zh.wikipedia.org/w/index.php?title=%E8%81%B2%E6%AF%8D&redirect=no][/initial/]] (/聲母/ in chinese) 「ㄓ」 (chih in /Wade–Giles/ romanization) in the input schema [[https://en.wikipedia.org/wiki/Bopomofo][/Bopomofo/]] , the IME server can't decide whether there still have key sequences or not, since the user can continue to press the keys mapped to [[https://en.wikipedia.org/wiki/Four_tones_(Middle_Chinese)][Four tones,]] such as pressing the key '3' to compose 「ㄓˇ」 or the space key to compose 「ㄓ」 with /even/ (平 píng) tone. Therefore, the backend IME server is required to keep running in background for listening requests from the frontend. I wrote server-side code with Python's ~socketserver~. You may refer to [[https://gitlab.com/Cycatz/tmux-rime/-/blob/main/tmux_rime/tmux_rime_server.py][~tmux_rime/rime_wrapper/tmux_rime_server.py~]]
 
 Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ called ~tmux-rime~ for the GSoC first stage evaluation as a proof of concept. It also serves as a test ground for the backend and /librime/. The following figures shows the structure and the screenshot of ~tmux-rime~.
+
+** ~tmux-rime~ screenshots 
 
 #+ATTR_LATEX: :width 4in 
 #+CAPTION: tmux-rime structure
@@ -116,7 +117,7 @@ Before implementing the frontend in ~vt~, I implemented the frontend for ~tmux~ 
 
 \clearpage 
 
-** Frontend 
+* Frontend 
 
 # FIX The sentence is too loooooooong~   
 The two most important functions associated with the frontend implementation are ~vt_processkey~ and ~terminal_input_char~. The former is for processing the key, and the latter is for inserting text onto the screen. Therefore, I hijacked the ~vt_processkey~ function. Instead of directly outputting text onto the screen with ~terminal_input_char~ function, I defined a new function called ~vt_ime_process_char~ to handle the user input then send requests to the IME server to convert them into CJK characters when the IME mode is enabled. 
@@ -171,8 +172,29 @@ Another thing we need to deal with is the display of the IME status bar. The gen
 #+end_src
 
 
-The kernel modifications are mostly under ~sys/dev/vt~ directory. To avoid cluttering the origin code, I created a additional directory called ~ime~ to store my patches. Here is a list of static and non-static functions defined in ~ime/vt_ime.{c,h}~ 
+# The kernel modifications are mostly under ~sys/dev/vt~ directory.
 
+In addition to the kernel modifications mentioned above, I also defined several custom functions to implement the frontend. To avoid cluttering the origin code, I created a additional directory called ~ime~ under ~sys/dev/vt~  to store my patches. You may refer to [[*Appendix][Appendix]] for detailed documentation.
+
+
+* Screenshots 
+
+#+CAPTION: Screenshot of running IME in vt 
+[[file:assets/vt_ime_screenshot.png]]
+
+\clearpage
+
+* Conclusion 
+
+** Thought  
+
+** Future work 
+
+
+* Appendix 
+
+** Introduction
+Here is a list of static and non-static functions defined in ~ime/vt_ime.{c,h}~
 
 Static functions:
 + ~static int vt_ime_send_message(struct vt_ime *vi, char *message, char *ret)~
@@ -190,60 +212,57 @@ Non-static functions:
 + ~int vt_ime_process_char(struct terminal *terminal, struct vt_device *vd, struct vt_ime *vi, int ch)~
 + ~void vt_ime_draw_status_bar(struct vt_device *vd, char *status)~
 
-*** ~vt_ime_send_message~
+** ~vt_ime_send_message~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~  
-  + ~static int vt_ime_send_message(struct vt_ime *vi, char *message, char *ret)~
+  # + ~static int vt_ime_send_message(struct vt_ime *vi, char *message, char *ret)~
 - Description: :: for communicating with the IME server with socket.
  
-*** ~vt_ime_send_char~
+** ~vt_ime_send_char~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static int vt_ime_send_char(struct vt_ime *vi, int ch, char *ret)~
+  # + ~static int vt_ime_send_char(struct vt_ime *vi, int ch, char *ret)~
 - Description: :: for sending a single char data with ~vt_ime_send_message~.
  
-*** ~vt_ime_delete~
+** ~vt_ime_delete~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static int vt_ime_delete(struct vt_ime *vi, char *ret)~
+  # + ~static int vt_ime_delete(struct vt_ime *vi, char *ret)~
 - Description: :: for sending the string "delete" with ~vt_ime_send_message~ for performing the delete action.
  
-*** ~vt_ime_request_output~
+** ~vt_ime_request_output~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static int vt_ime_request_output(struct vt_ime *vi, char *ret)~
+  # + ~static int vt_ime_request_output(struct vt_ime *vi, char *ret)~
 - Description: :: for sending the string "output" with ~vt_ime_send_message~ for requesting the text that will be inserted.   
  
-*** ~vt_ime_check_valid_char~
+** ~vt_ime_check_valid_char~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static int vt_ime_check_valid_char(struct vt_ime *vi, int ch)~
+  # + ~static int vt_ime_check_valid_char(struct vt_ime *vi, int ch)~
 - Description: :: for deciding which keys are required to be captured in the IME mode.
 
-*** ~vt_ime_convert_utf8_byte~
+** ~vt_ime_convert_utf8_byte~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static int vt_ime_convert_utf8_byte(int *utf8_left, int *utf8_partial, unsigned char c)~
+  # + ~static int vt_ime_convert_utf8_byte(int *utf8_left, int *utf8_partial, unsigned char c)~
 - Description: :: for converting a single utf8-encoded char sequence into a 32-bit unsigned integer (~term_char_t~).
 
-*** ~vt_ime_input~
+** ~vt_ime_input~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~static void vt_ime_input(struct terminal *term, const void *buf, size_t len)~
+  # + ~static void vt_ime_input(struct terminal *term, const void *buf, size_t len)~
 - Description: :: for inserting a utf8-encoded string ~buf~ with len ~len~ into the terminal with ~terminal_input_char~.
 
-*** ~vt_ime_toggle_mode~
+** ~vt_ime_toggle_mode~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~int vt_ime_toggle_mode(struct vt_ime *vi)~
+  # + ~int vt_ime_toggle_mode(struct vt_ime *vi)~
 - Description: :: for toggling the IME mode. 
   
-*** ~vt_ime_is_enabled~
+** ~vt_ime_is_enabled~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~int vt_ime_is_enabled(struct vt_ime *vi)~
+  # + ~int vt_ime_is_enabled(struct vt_ime *vi)~
 - Description: :: for checking if the IME mode is enabled. 
 
-*** ~vt_ime_process_char~
+** ~vt_ime_process_char~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~int vt_ime_process_char(struct terminal *terminal, struct vt_device *vd, struct vt_ime *vi, int ch)~
+  # + ~int vt_ime_process_char(struct terminal *terminal, struct vt_device *vd, struct vt_ime *vi, int ch)~
 - Description: :: for processing chars and performing different actions.    
 
-*** ~vt_ime_draw_status_bar~
+** ~vt_ime_draw_status_bar~
 - Defined in: :: ~sys/dev/vt/ime/vt_ime.c~
-  + ~void vt_ime_draw_status_bar(struct vt_device *vd, char *status)~
-    
+  # + ~void vt_ime_draw_status_bar(struct vt_device *vd, char *status)~
 - Description: :: for drawing the IME status on the screen     
-  
-* Conclusion 
