@@ -186,14 +186,23 @@ In addition to the kernel modifications mentioned above, I also defined several 
 
 * Conclusion 
 
-** Thought  
+This report has described the GSoC 2021 project /Input method in FreeBSD virtual terminal/, which aims to provide an environment that can run IME to enable users to type CJK characters in FreeBSD ~vt(4)~. We have also showned how we built the backend IME server based on ~librime~ by using /Python/'s ~ctypes~ and ~socketserver~ as well as implemented the ~tmux~ and ~vt~ frontend for handling keys and showing the input method status.  
 
-** Future work 
+* Future work 
 
-
+** Backend
++ Rewrite the backend in C
+  + For being integrated into base  
++ Support more IME features
+  + e.g., candidate selction, schema selction and etc.    
++ Support various IME libraries
++ Find a better way for communication between kernel and user space
+** Frontend 
++ Improve the display flow of the IME status in ~vt~
++ Allow the user to customize IME frontend settings
+  + For example, using ~sysctl(8)~ to set keybindings  
 * Appendix 
 
-** Introduction
 Here is a list of static and non-static functions defined in ~ime/vt_ime.{c,h}~
 
 Static functions:
