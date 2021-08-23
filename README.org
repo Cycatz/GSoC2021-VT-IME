@@ -1,24 +1,37 @@
 * GSoC'21: Input method in FreeBSD virtual terminal
+** Screenshot 
+[[file:assets/vt_ime_screenshot.png]]
 
-** Project description
-This project aims to provide an environment that can run IME (input method engine) to enable users to type CJK characters in ~vt~.
-
-
-** Project Proposal 
+** Proposal 
 Under the ~proposal~ directory. 
 
+** Wiki Page
+The project page in the freebsd wiki: https://wiki.freebsd.org/SummerOfCode2021Projects/InputMethodInFreeBSDVirtualTerminal
+
+The wiki page also contains my weekly reports during GSoC.  
+
+** Description
+This project aims to provide an environment that can run IME (input method engine) to enable users to type CJK characters in ~vt(4)~.
+
+This project was divided into two parts, backend and frontend. The backend is supposed to process keys sent from the frontend and translate them into valid CJK characters, depending on different input schemas. The frontend, on the other hand, recieves utf-8 encoded CJK characters and insert them on the screen. Additionally, the frontend need to print preedit string and candidates during composing.
+
 ** Deliverables
-+ Create an IME backend that accepts keystrokes as arguments or messages and communicates with the input method engine library.
-  + Use librime as the input method engine library to translate keystrokes into valid CJK characters.
-  + Provide extra features like schema selection, deployment, and data synchronization. 
-+ Create a graphical frontend to be able to show the current input state and candidates of CJK characters.
-  + First phase: Print the IME information on the tmux status line. Why tmux? Since it's more convenient for us to draft the UI at an early stage and decide how to arrange and display those IME components on the screen. Furthermore, tmux let us customize keybindings and call external scripts easily.
-  + Final phase: Display IME components on the virtual terminal console. And we also need to handle those keys manually and send them to the backend.
+ + *Backend*: An IME API server for communicating with the IME library
+   * Use ~librime~ as the input method engine library to translate keys into valid CJK characters.
+   * Create APIs for accessing the IME library functions.
+   * Provide extra features like schema selection, data deployment and data synchronization. 
+ + *Frontend*: A graphical frontend for showing the current input status and characters/words candidates.  
+   + First stage: Implement the frontend in ~tmux~. 
+     + Design an IME client for interacting with the backend IME API server.
+     + Display IME components on the ~tmux~ status bar.
+   + Final stage: Implement the frontend in ~vt(4)~. 
+     + Handle keys in kernel and send them to the backend.
+     + Display IME components on the screen.
 
 ** Report
 Under the ~report~ directory. 
 
-** Code  
+** Code
 + Tmux-rime: https://gitlab.com/Cycatz/tmux-rime
 + Cloned source code: https://github.com/Cycatz/freebsd-src/tree/releng/13.0/sys/dev/vt 
 
