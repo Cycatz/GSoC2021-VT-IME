@@ -32,8 +32,11 @@ This project was divided into two parts, backend and frontend. The backend is su
 Under the ~report~ directory. 
 
 ** Code
-+ Tmux-rime: https://gitlab.com/Cycatz/tmux-rime
-+ Cloned source code: https://github.com/Cycatz/freebsd-src/tree/releng/13.0/sys/dev/vt 
++ Tmux-rime: https://github.com/Cycatz/tmux-rime
++ Cloned source code:
+  + Branch ~vt-ime~: https://github.com/Cycatz/freebsd-src/tree/vt-ime
+  + Branch ~vt-ime-13.0~ (Branching from ~releng/13.0~): https://github.com/Cycatz/freebsd-src/tree/vt-ime-13.0
+  + A single patch: https://github.com/Cycatz/freebsd-src/commit/32d4627e00157a84677afe00dfdfd1d051c7db38.patch
 
 ** Notes
 + Project notes: https://gitlab.com/Cycatz/gsoc-notes 
