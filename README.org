@@ -40,3 +40,10 @@ Under the ~report~ directory.
 
 ** Notes
 + Project notes: https://gitlab.com/Cycatz/gsoc-notes 
+
+** Usage 
+1. Set up the kernel patch (branch ~vt-ime~): https://github.com/Cycatz/freebsd-src/tree/vt-ime
+2. Set up the backend:  https://github.com/Cycatz/tmux-rime/blob/vt-rime/README.org
+3. Fire up the ~vt~ console and press right ctrl key to toggle IME mode
+4. Press keys to compose CJK chars/words and use ~Space~ to commit the preedit string (Currently only support the input scheme /bopomofo/)
+
