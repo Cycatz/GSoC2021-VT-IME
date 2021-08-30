@@ -44,6 +44,7 @@ Under the ~report~ directory.
 ** Usage 
 1. Set up the kernel patch (branch ~vt-ime~): https://github.com/Cycatz/freebsd-src/tree/vt-ime
 2. Set up the backend:  https://github.com/Cycatz/tmux-rime/blob/vt-rime/README.org
-3. Fire up the ~vt~ console and press right ctrl key to toggle IME mode
-4. Press keys to compose CJK chars/words and use ~Space~ to commit the preedit string (Currently only support the input scheme /bopomofo/)
+3. Fire up the ~vt~ console and set the console font to ~b16.hex~ in [[https://github.com/emaste/fontstuff][fontstuff]] for displaying CJK characters correctly
+4. Press right ctrl key to toggle IME mode
+5. Press keys to compose CJK chars/words and use ~Space~ to commit the preedit string (Currently only support the input scheme /bopomofo/)
 
