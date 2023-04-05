@@ -1,0 +1,327 @@
+#+TITLE: VT-IME: Input Method Editor in FreeBSD vt(4)
+#+SUBTITLE: AsiaBSDCon 2023
+#+AUTHOR: Fan Chung (Cycatz)
+#+OPTIONS: H:2
+#+BEAMER_THEME: metropolis
+#+LATEX_HEADER: \usepackage[space]{xeCJK}
+#+LATEX_HEADER: \setCJKmainfont{NotoSansCJKtc}[UprightFont = {*-Light}, BoldFont = {*-Regular}]
+#+LATEX_HEADER: \linespread{1.1}\selectfont        % 行距
+#+LATEX_HEADER: \XeTeXlinebreaklocale "zh"         % 針對中文自動換行，因為英文只會在空白處斷行，中文可以任意
+#+LATEX_HEADER: \XeTeXlinebreakskip = 0pt plus 1pt % 字與字之間加入0pt至1pt的間距，確保左右對整齊
+#+LATEX_HEADER: \parindent 0em                     % 段落縮進
+#+LATEX_HEADER: \setlength{\parskip}{8pt}         % 段落之間的距離
+#+LATEX_HEADER: \usepackage[export]{adjustbox}
+#+LATEX_HEADER: \usepackage{plantuml}
+#+LATEX_HEADER: \setbeamerfont{section title}{size=\footnotesize}
+
+** About me
+*** First column :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.60
+:END:
+
+**** ~$ id cycatz~
++ Fan Chung (鐘凡)
++ Undergraduate @ NYCU, Taiwan
++ Exchange student @ UIUC, US
++ Been using FreeBSD for ~3 yrs
++ Like *nix ricing
+
+*** Second column :BMCOL:
+:PROPERTIES:
+:BEAMER_col: 0.30
+:END:
+file:assets/profile.jpg
+
+
+
+* Background
+** Input Method Editor (IME)
++ Input characters that can't be typed on standard keyboard
+  + Over \textbf{3000} characters are required in daily Chinese writings
++ ~chinese/fcitx~, ~textproc/ibus~
+
+#+begin_export latex
+\begin{tabular}{cl}
+  \begin{tabular}{c}
+  \hspace{0.5cm}\textit{Chinese keyboards}, huh? \hspace{1.5cm}
+  \end{tabular}
+  & \begin{tabular}{l}
+    \adjustimage{width=1.3in}{assets/chinese_keyboard.jpg}
+  \end{tabular}  \\
+\end{tabular}
+#+end_export
+
+
+** Input Method [Engine]
++ An IME typically support many /input method engines/, which implement one or more /input method/ (IM)
++ /Input method/ (IM) is a set of algorithms to convert keystrokes into characters
+
+
+** Input Method [Engine]
+#+ATTR_LATEX: :width 2in
+[[file:assets/ime_japan.png]]
+
+
+** Input Method - Example
+#+ATTR_LATEX: :width 4in
+[[file:assets/conflict.png]]
+
+\rightarrow The user have to choose the word they want to type!
+
+
+** Hierarchy of Input Method [Editor|Engine]
++ Input method editor
+  + Input method engine 1
+    + Input method a
+    + \cdots
+  + Input method engine 2
+    + \cdots
+
+** Hierarchy of Input Method [Editor|Engine]
++ ~chinese/fcitx~
+  + ~chinese/fcitx-rime~
+    + ~chinese/rime-bopomofo~
+    + \cdots
+  + ~japanese/fcitx-mozc~
+  + \cdots
+
+** Fcitx
+#+CAPTION: Fcitx, an input method editor
+#+ATTR_LATEX: :width 2.5in
+[[file:assets/fcitx_ime.png]]
+
+** CJK
++ /CJK/ is an acronym for "Chinese, Japanese, and Korean"
++ /CJK character/ refers to the Chinese characters in the writing systems of the three langauges
+
+
+** Virtual Terminal in FreeBSD
++ Two implementations: ~syscons(4)~ and ~vt(4)~
++ ~vt(4)~ is the newer implementation featuring:
+  + UTF-8 encoding
+  + double-width characters
+
+  \rightarrow Make it possible to display CJK characters!
+
+** Why we need a Input Method Editor in FreeBSD terminal?
++ Still cannot input CJK characters directly in ~vt(4)~ !
+  + For example, /fcitx/, depends on GUI framework, such as X
++ Unrealistic to install a whole GUI framework for simple text processing
+
+
+* VT-IME
+
+** VT-IME --- Introduction
++ \textbf{VT-IME} ---  a system integrating an IME into vt(4)
++ Able to type CJK characters w/o IME & GUI framework
+
+
+** VT-IME --- Components
+VT-IME consists of two parts: frontend & backend
+*** Frontend --- patched ~vt(4)~
++ Capture key events and render the IME interface
+
+*** Backend --- an userspace server
++ Run an /IM server/ in the userspace to translate key press events to CJK characters
+
+** VT-IME --- Diagram
+
+#+begin_src plantuml :exports results
+skinparam backgroundcolor transparent
+skinparam defaultFontName Fira Sans Light
+skinparam defaultFontSize 28
+
+autonumber 1
+
+actor User
+participant "Frontend" as frontend #FF2052
+participant "Backend" as backend #4997D0
+participant "IM engine library" as ime #FCF75E
+
+
+User -> frontend: Activate VT-IME mode
+activate frontend
+
+
+group Loop
+User -> frontend: Type a key sequence
+
+frontend -> backend: Send user key press events
+activate backend
+
+backend -> ime: Call input method APIs with key info
+activate ime
+
+
+ime --> backend: Return valid CJK chars
+deactivate ime
+
+
+backend --> frontend: Send the CJK chars
+deactivate backend
+
+frontend --> User: Input the CJK chars
+deactivate frontend
+end
+
+#+end_src
+
+#+CAPTION: VT-IME diagram
+#+RESULTS:
+[[file:assets/vt-ime_diagram.png]]
+
+
+
+** VT-IME --- Message Types
+1. /key/ --- send visible key information
+  + e.g., ~'a'~, ~'3'~
+2. /raw/ --- send special key information
+  + e.g., ~Enter~, ~Space~
+3. /delete/ --- request the deletion of a character
+4. /output/ --- request the current status text
+5. /exit/ --- quit VT-IME mode
+
+
+** VT-IME --- Frontend
++ Hack into ~vt(4)~ code
+  + ~src/sys/dev/vt~
+
++ Q: Where does ~vt(4)~ receive key events?
+
+  \rightarrow A: ~vt_processkey()~
++ Q: Where does ~vt(4)~ input chars?
+
+  \rightarrow A: ~terminal_input_(char|special|raw)~
+
++ Approach:
+  + Intercept ~vt_processkey()~
+  + Call ~terminal_input_(char|special|raw)~ manually
+
+** VT-IME --- Frontend
+:PROPERTIES:
+:BEAMER_OPT: fragile
+:END:
+
+#+begin_export latex
+\begin{minted}[
+breaklines=true,
+breakanywhere=true,
+linenos,
+fontsize=\scriptsize,
+mathescape,
+samepage,
+xrightmargin=0.5cm,
+xleftmargin=0.5cm]{C}
+void
+vt_processkey(keyboard_t *kbd, struct vt_device *vd, int c)
+{
+     /* ... */
+
+#if VT_IME
+       if (vt_ime_is_enabled(&vt_ime_default))
+         vt_ime_process_char(vw->vw_terminal,
+                             main_vd,
+                             &vt_ime_default,
+                             KEYCHAR(c));
+       else
+#endif
+         terminal_input_char(vw->vw_terminal,
+                             KEYCHAR(c));
+     } else
+       terminal_input_raw(vw->vw_terminal, c);
+     /* ... */
+}
+
+\end{minted}
+#+end_export
+
+
+** VT-IME --- Frontend
+:PROPERTIES:
+:BEAMER_OPT: fragile
+:END:
+#+begin_export latex
+% \begin{minted}{c}
+\begin{minted}[
+breaklines=true,
+breakanywhere=true,
+linenos,
+fontsize=\scriptsize,
+mathescape,
+samepage,
+xrightmargin=0.5cm,
+xleftmargin=0.5cm]{C}
+void
+vt_ime_draw_status_bar(struct vt_device *vd, char *status)
+{
+  /* ... */
+  term_char_t ch = FG_WHITE | BG_BLUE;
+  int len = strlen(status);
+  while (len-- > 0) {
+    ret = vt_ime_convert_utf8_byte(&utf8_left,
+                                   &utf8_partial,
+                                   *c++);
+    if (ret <= 0)
+      continue;
+    vb->vb_ime_buffer[blen++] = ch | utf8_partial;
+    vb->vb_ime_buffer[blen++] = ch
+                                | utf8_partial
+                                | TFORMAT(TF_CJK_RIGHT);
+  }
+  /* ... */
+}
+\end{minted}
+#+end_export
+
+
+
+** VT-IME --- Frontend
+:PROPERTIES:
+:BEAMER_OPT: fragile
+:END:
+
+#+begin_export latex
+\begin{minted}[
+breaklines=true,
+breakanywhere=true,
+linenos,
+fontsize=\scriptsize,
+mathescape,
+samepage,
+xrightmargin=0.5cm,
+xleftmargin=0.5cm]{C}
+inline term_char_t
+VTBUF_GET_FIELD(const struct vt_buf *vb, int r, int c)
+{
+  if (r == 0 && vt_ime_buf_state)
+    return vb->vb_ime_buffer[c];
+  else
+    return ((vb)->vb_rows[((vb)->vb_roffset + (r)) %
+            VTBUF_MAX_HEIGHT(vb)][(c)]);
+}
+\end{minted}
+#+end_export
+
+
+
+** VT-IME --- Backend
++ Translate key press events into valid CJK characters
++ Choose /librime/ as the input method engine library
+  + And select the input method /rime-bopomofo/
+
+** VT-IME --- Screenshot
+#+ATTR_LATEX: :width 2.7in
+#+CAPTION: VT-IME screenshot
+[[file:assets/vt_ime_screenshot.png]]
+
+* Demo
+* Future work
+** Future work
++ Better communication between frontend and backend
+  + Current approach: network socket \rightarrow security concern
++ Support more IME features
+  + e.g., able to select between different input methods
++ Support IME interface customization
+  + e.g., customizable key bindings, status bar fg/bg color
+* Q & A
