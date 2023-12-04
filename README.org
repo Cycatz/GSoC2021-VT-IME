@@ -32,9 +32,9 @@ This project was divided into two parts, backend and frontend. The backend is su
 
 ** Results
 
-This project was completed successfully during Google Summer of Code 2021, and you can access report under the ~report~ directory. 
+This project was completed successfully during Google Summer of Code 2021, and you can access the report under the ~report~ directory. 
 
-However, if you want to see more detailed background, introduction and future goals of this project, please access my paper, which published at  [[https://2023.asiabsdcon.org/][AsiaBSDCon 2023]], under ~AsiaBSDCon2023~ directory; you can also access on [[https://papers.freebsd.org/2023/asiabsdcon/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.files/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.pdf][FreeBSD paper website]].
+However, if you want to see more detailed background, introduction and future goals of this project, please access my paper, which is published at  [[https://2023.asiabsdcon.org/][AsiaBSDCon 2023]], under ~AsiaBSDCon2023~ directory; you can also access on [[https://papers.freebsd.org/2023/asiabsdcon/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.files/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.pdf][FreeBSD paper website]].
 
 ** Code
 + Tmux-rime: https://github.com/Cycatz/tmux-rime
