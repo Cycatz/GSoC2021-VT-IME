@@ -11,6 +11,7 @@ The project page in the freebsd wiki: https://wiki.freebsd.org/SummerOfCode2021P
 The wiki page also contains my weekly reports during GSoC.  
 
 ** Description
+VT-IME is a input method editor for FreeBSD virtual terminal vt(4), developed under Google Summer of Code 2021.
 
 The VT-IME framework, specifically designed to enable direct CJK (Chinese, Japanese, and Korean) character input in FreeBSD's virtual terminal, vt(4), addresses a significant functionality gap. Despite vt(4)'s advancements, including Unicode support and the capability to display double-width CJK characters, direct CJK character input capability was still lacking. 
 
