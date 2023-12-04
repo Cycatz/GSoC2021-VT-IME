@@ -11,7 +11,6 @@ The project page in the freebsd wiki: https://wiki.freebsd.org/SummerOfCode2021P
 The wiki page also contains my weekly reports during GSoC.  
 
 ** Description
-[[https://papers.freebsd.org/2023/asiabsdcon/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.files/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.pdf][Project whitepaper]]
 
 This project aims to provide an environment that can run IME (input method engine) to enable users to type CJK characters in ~vt(4)~.
 
@@ -32,6 +31,9 @@ This project was divided into two parts, backend and frontend. The backend is su
 
 ** Report
 Under the ~report~ directory. 
+
+** Paper
+[[https://papers.freebsd.org/2023/asiabsdcon/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.files/fan-VT_IME_Input_Method_Editor_in_FreeBSD_vt_4.pdf][Project whitepaper]]
 
 ** Code
 + Tmux-rime: https://github.com/Cycatz/tmux-rime
