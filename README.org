@@ -12,9 +12,9 @@ The wiki page also contains my weekly reports during GSoC.
 
 ** Description
 
-This project aims to provide an environment that can run an IME (Input Method Engine) to enable users to type non-ASCII characters like CJK in vt(4).
+The vt-ime framework, specifically designed to enable direct CJK (Chinese, Japanese, and Korean) character input in FreeBSD's virtual terminal, vt(4), addresses a significant functionality gap. Despite vt(4)'s advancements, including Unicode support and the capability to display double-width CJK characters, direct CJK character input capability was still lacking. 
 
-This project was divided into two parts: backend and frontend. The backend processes keys sent from the frontend and translates them into valid CJK characters, depending on different input schemas. The frontend receives utf-8 encoded CJK characters and inserts them on the screen. Additionally, the frontend needs to print preedit strings and candidates during composing.
+The vt-ime framework, integrating both backend and frontend components, addresses this gap by providing seamless CJK and non-ASCII character input, thereby enhancing vt(4)'s functionality and usability, especially for users who rely on non-ASCII characters. The backend component is tasked with efficient input processing and character encoding, ensuring both compatibility and performance. Concurrently, the frontend offers an intuitive interface for user interaction. This blend of backend robustness and frontend usability establishes vt-ime as a significant development in FreeBSD, meeting the needs of multilingual environments. 
 
 ** Deliverables
    - /Backend/: An IME API server for communicating with the IME library
