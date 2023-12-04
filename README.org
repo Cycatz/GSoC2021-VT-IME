@@ -12,9 +12,9 @@ The wiki page also contains my weekly reports during GSoC.
 
 ** Description
 
-The vt-ime framework, specifically designed to enable direct CJK (Chinese, Japanese, and Korean) character input in FreeBSD's virtual terminal, vt(4), addresses a significant functionality gap. Despite vt(4)'s advancements, including Unicode support and the capability to display double-width CJK characters, direct CJK character input capability was still lacking. 
+The VT-IME framework, specifically designed to enable direct CJK (Chinese, Japanese, and Korean) character input in FreeBSD's virtual terminal, vt(4), addresses a significant functionality gap. Despite vt(4)'s advancements, including Unicode support and the capability to display double-width CJK characters, direct CJK character input capability was still lacking. 
 
-The vt-ime framework, integrating both backend and frontend components, addresses this gap by providing seamless CJK and non-ASCII character input, thereby enhancing vt(4)'s functionality and usability, especially for users who rely on non-ASCII characters. The backend component is tasked with efficient input processing and character encoding, ensuring both compatibility and performance. Concurrently, the frontend offers an intuitive interface for user interaction. This blend of backend robustness and frontend usability establishes vt-ime as a significant development in FreeBSD, meeting the needs of multilingual environments. 
+The VT-IME framework, integrating both backend and frontend components, addresses this gap by providing seamless CJK and non-ASCII character input, thereby enhancing vt(4)'s functionality and usability, especially for users who rely on non-ASCII characters. The backend component is tasked with efficient input processing and character encoding, ensuring both compatibility and performance. Concurrently, the frontend offers an intuitive interface for user interaction. This blend of backend robustness and frontend usability establishes VT-IME as a significant development in FreeBSD, meeting the needs of multilingual environments. 
 
 ** Deliverables
    - /Backend/: An IME API server for communicating with the IME library
