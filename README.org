@@ -43,9 +43,6 @@ However, if you want to see more detailed background, introduction and future go
   + Branch ~vt-ime-13.0~ (Branching from ~releng/13.0~): https://github.com/Cycatz/freebsd-src/tree/vt-ime-13.0
   + A single patch: https://github.com/Cycatz/freebsd-src/commit/32d4627e00157a84677afe00dfdfd1d051c7db38.patch
 
-** Notes
-+ Project notes: https://gitlab.com/Cycatz/gsoc-notes 
-
 ** Usage 
 1. Set up the kernel patch (branch ~vt-ime~): https://github.com/Cycatz/freebsd-src/tree/vt-ime
 2. Set up the backend:  https://github.com/Cycatz/tmux-rime/blob/vt-rime/README.org
